@@ -16,6 +16,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.BeforeClass;
@@ -65,21 +66,28 @@ public class AllureClientApplicationTests {
 			List<File> result2 = walk.filter(Files::isRegularFile)
 					.map(x -> x.toFile())
 					.collect(Collectors.toList());
-			
+			JSONArray obAr = new JSONArray();
 			result2.forEach(f -> {
 				try {
 					byte[] bArray = FileUtils.readFileToByteArray(f);
+					if(bArray.length != 0) {
+						String encodedfile = new String(Base64.encodeBase64(bArray), "UTF-8");
+						JSONObject ob = new JSONObject();
+						ob.accumulate("file_name", f.getName());
+						ob.accumulate("content_base64", Base64.decodeBase64(encodedfile));
+						obAr.put(ob);
+						System.out.println(ob.toString());
+					} else {
+						System.out.println("File is empty -> "+f.getName());
+					}
+					
 //					byte[] bArray = IOUtils.toByteArray(new FileInputStream(f));
-					String encodedfile = new String(Base64.encodeBase64(bArray), "UTF-8");
-					JSONObject ob = new JSONObject();
-					ob.accumulate("file_name", f.getName());
-					ob.accumulate("content_base64", Base64.decodeBase64(encodedfile));
-					System.out.println(ob.toString());
+					
 				} catch (IOException | JSONException e) {
 					e.printStackTrace();
 				}
 			});
-
+			System.out.println("Final Array text is ->"+obAr.toString());
 //			result2.forEach(f -> {
 //				try {
 //					String ext = FilenameUtils.getExtension(f.toString());
